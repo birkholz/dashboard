@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+        <style type="text/css">
+        .space {
+            margin-right: 10px;
+            color: blue;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .space.active {
+            color: red;
+        }
+        .status {
+            margin-right: 10px;
+            color: blue;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .status.active {
+            color: red;
+        }
+        input.time_input {
+            margin-left: 20px;
+            width: 4em;
+        }
+        </style>
+	</head>
+	<body>
+        <div id="form">
+            <div>Get your key/secret <a href="https://www.assembla.com/user/edit/manage_clients">here</a></div>
+            <label for="key">Key: <label><input id="key" type="text">
+            <label for="secret">Secret: <label><input id="secret" type="text">
+            <button onclick="getTickets();">Go</button>
+        </div>
+        <div id="space_list">Space:&nbsp;<span class="space active">All</span></div>
+        <div id="status_list">Status:&nbsp;<span class="status active">All</span></div>
+        <div id="tickets"></div>
+		<script src='http://code.jquery.com/jquery-1.10.2.min.js'></script>
+		<script type="text/javascript">
+            var all_spaces,
+                spaces_remaining,
+                space_filter,
+                status_filter,
+                api_key,
+                api_secret,
+                user_id,
+                statuses = {};
+
+            function getSpaceName(id) {
+                for (var i in all_spaces) {
+                    if (all_spaces[i]['id'] == id) {
+                        return all_spaces[i]['name'];
+                        break;
+                    }
+                }
+            }
+
+            function getSpaceWikiName(id) {
+                for (var i in all_spaces) {
+                    if (all_spaces[i]['id'] == id) {
+                        return all_spaces[i]['wiki_name'];
+                        break;
+                    }
+                }
+            }
+
+            $(document).on('ready', function(){
+                api_key = localStorage.getItem('api_key');
+                api_secret = localStorage.getItem('api_secret');
+                    // TODO set filters
+                if (api_key && api_secret) {
+                    $('#key').val(api_key);
+                    $('#secret').val(api_secret);
+                    getTickets();
+                }
+            });
+
+            $(document).on('click', '.status', function(){
+                $('.status').removeClass('active');
+                $(this).addClass('active');
+                var status = $(this).text();
+                if (status == 'All') $('.ticket').show();
+                else {
+                    $('.ticket').hide();
+                    $('.ticket[data-status="'+status+'"]').show();
+                }
+            });
+
+            $(document).on('click', '.space', function(){
+                $('.space').removeClass('active');
+                $(this).addClass('active');
+                var space = $(this).text();
+                if (space == 'All') $('.space_div').show();
+                else {
+                    $('.space_div').hide();
+                    $('.space_div[data-name="'+space+'"]').show();
+                }
+            });
+
+            Date.prototype.subHours= function(h){
+                this.setHours(this.getHours()-h);
+                return this;
+            };
+
+            $(document).on('click', '.time_btn', function(){
+                var time_input = $(this).siblings('.time_input'),
+                    value = parseInt(time_input.val()),
+                    ticket = $(this).closest('.ticket'),
+                    space_id = ticket.attr('data-space-id'),
+                    ticket_id = ticket.attr('data-id'),
+                    start_time = new Date(),
+                    end_time = new Date(),
+                    data = {user_task: {
+                        space_id: space_id,
+                        ticket_id: ticket_id,
+                        hours: value,
+                        description: 'Logged via Dashboard.',
+                        begin_at: start_time.subHours(value),
+                        end_at: end_time
+                    }};
+                $.ajax({
+                    url: 'https://api.assembla.com/v1/tasks',
+                    type: 'POST',
+                    headers: {
+                        'X-Api-Key': api_key,
+                        'X-Api-Secret': api_secret
+                    },
+                    data: JSON.stringify(data),
+                    dataType: "json",
+                    contentType: "application/json",
+                    processData: false,
+                    success: function(response){
+                        time_input.val('');
+                        alert('Time logged.');
+                    }
+                });
+            });
+
+            function getUserID(){
+                $.ajax({
+                    url: 'https://localhost:8002/v1/user.json',
+                    type: 'GET',
+                    headers: {
+                        'X-Api-Key': api_key,
+                        'X-Api-Secret': api_secret
+                    },
+                    dataType: "json",
+                    success: function(user){
+                        user_id = user['id'];
+                    }
+                });
+            }
+
+            function getTickets(){
+                api_key = $('#key').val(),
+                api_secret = $('#secret').val();
+                $('#form').remove();
+                localStorage.setItem('api_key', api_key);
+                localStorage.setItem('api_secret', api_secret);
+                getUserID();
+                $.ajax({
+                    url: 'https://api.assembla.com/v1/spaces.json',
+                    type: 'GET',
+                    headers: {
+                        'X-Api-Key': api_key,
+                        'X-Api-Secret': api_secret
+                    },
+                    dataType: "json",
+                    success: function(spaces) {
+                        all_spaces = spaces;
+                        spaces_remaining = spaces.length;
+                        var space_id;
+                        for (var i in spaces) {
+                            var space_id = spaces[i]['id'],
+                                space_name = spaces[i]['name'];
+                            $('<a class="space">'+space_name+'</a>').appendTo($('#space_list'));
+                            $.ajax({
+                                url: 'https://api.assembla.com/v1/spaces/'+space_id+'/tickets.json',
+                                type: 'GET',
+                                data: {
+                                    'report': 8,
+                                    'per_page': 50
+                                },
+                                dataType: "json",
+                                headers: {
+                                    'X-Api-Key': api_key,
+                                    'X-Api-Secret': api_secret
+                                },
+                                success: function(tickets) {
+                                    if (tickets) {
+                                        var space_id = tickets[0]['space_id'],
+                                            s_name = getSpaceName(space_id),
+                                            w_name = getSpaceWikiName(space_id),
+                                            space_div = $('<div class="space_div" data-name="'+s_name+'"><h3 id='+s_name+'>'+s_name+'</h3></div>');
+                                        for (var i in tickets) {
+                                            var t = tickets[i];
+                                            var href = 'https://www.assembla.com/spaces/'+w_name+'/tickets/'+t['number'];
+                                            var link = $('<a  href="'+href+'">#'+t['number']+': '+t['summary']+' ('+t['status']+')'+'</a>');
+                                            var ticket_div = $('<div class="ticket"></div>');
+                                            var time_input = $('<input type="number" class="time_input" placeholder=""><button class="time_btn">Log</button>');
+                                            ticket_div.attr('title', t['description']);
+                                            ticket_div.attr('data-status', t['status']);
+                                            ticket_div.attr('data-space-id', space_id);
+                                            ticket_div.attr('data-id', t['id']);
+                                            statuses[t['status']] = true;
+                                            ticket_div.append(link);
+                                            ticket_div.append(time_input);
+                                            space_div.append(ticket_div);
+                                        };
+                                        $('#tickets').append(space_div);
+                                    }
+                                    spaces_remaining -= 1;
+                                    if (spaces_remaining == 0) {
+                                        var status_list = Object.keys(statuses);
+                                        for (var i in status_list) {
+                                            var status = status_list[i];
+                                            $('<span class="status">'+status+'</span>').appendTo($('#status_list'));
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        </script>
+	</body>
+</html>
