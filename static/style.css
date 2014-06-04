@@ -1,0 +1,32 @@
+.space {
+    margin-right: 10px;
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.space.active {
+    color: red;
+}
+.status {
+    margin-right: 10px;
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.status.active {
+    color: red;
+}
+.unassign {
+    margin-left: 10px;
+    color: red;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.unassign_all {
+    margin-left: 10px;
+    font-size: 90%;
+    color: red;
+    text-decoration: underline;
+    color: red;
+    cursor: pointer;
+}
