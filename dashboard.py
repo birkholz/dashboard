@@ -1,9 +1,5 @@
 from flask import Flask, Response, render_template, request, jsonify
 import requests
-
-api_key = ''
-api_secret = ''
-
 from localsettings import *
 
 app = Flask(__name__)
@@ -51,4 +47,5 @@ def get_tickets(space_id):
 
 
 if __name__ == "__main__":
-    app.run(port=80)
+    app.run(port=port_number)
+
