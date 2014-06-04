@@ -1,0 +1,45 @@
+<!doctype html>
+<html ng-app="dashboard">
+	<head>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.10/angular.min.js"></script>
+		<script type="text/javascript" src="/static/app.js"></script>
+		<link rel="stylesheet" type="text/css" href="/static/style.css">
+		<title>Dashboard</title>
+	</head>
+	<body ng-controller="DashboardCtrl">
+		<button ng-click="load()">Load</button>
+		<div id="space_list">
+			Space:&nbsp;
+			<span class="space"
+			ng-click="currentSpace=null"
+			ng-class="{active:allSpaces()}">All</span>
+			<span class="space"
+				ng-repeat="space in spaces"
+				ng-class="{active:isCurrentSpace(space)}"
+				ng-click="filterSpace(space)"
+				ng-show="space.tickets.length"
+				data-name="{{space.name}}">{{space.name}}</span>
+		</div>
+        <div id="status_list">
+        	Status:&nbsp;
+        	<span class="status active">All</span>
+        </div>
+        <div id="tickets">
+        	<div class="space_div"
+        		ng-repeat="space in spaces"
+        		ng-show="spaceIsShown(space)">
+        		<h3>
+        			{{space.name}}
+        			<span class="unassign_all">Unassign All</span>
+        		</h3>
+        		<div class="ticket"
+        			ng-repeat="ticket in space.tickets">
+        			<a href="{{ticket.href}}">
+        				#{{ticket.number}}: {{ticket.summary}} ({{ticket.status}})
+        			</a>
+        			<span class="unassign">Unassign</span>
+        		</div>
+        	</div>
+        </div>
+	</body>
+</html>
