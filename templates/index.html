@@ -22,18 +22,26 @@
 		</div>
         <div id="status_list">
         	Status:&nbsp;
-        	<span class="status active">All</span>
+        	<span class="status"
+                ng-click="currentStatus=null"
+                ng-class="{active:allStatuses()}">All</span>
+            <span class="status"
+                ng-repeat="status in statuses"
+                ng-class="{active:isCurrentStatus(status)}"
+                ng-click="filterStatus(status)"
+                data-name="{{status}}">{{status}}</span>
         </div>
         <div id="tickets">
         	<div class="space_div"
         		ng-repeat="space in spaces"
-        		ng-show="spaceIsShown(space)">
+        		ng-show="spaceVisible(space)">
         		<h3>
         			{{space.name}}
         			<span class="unassign_all">Unassign All</span>
         		</h3>
         		<div class="ticket"
-        			ng-repeat="ticket in space.tickets">
+        			ng-repeat="ticket in space.tickets"
+                    ng-show="statusVisible(ticket.status)">
         			<a href="{{ticket.href}}">
         				#{{ticket.number}}: {{ticket.summary}} ({{ticket.status}})
         			</a>
