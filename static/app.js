@@ -3,29 +3,70 @@
 
 	app.controller('DashboardCtrl', function($scope, $http){
 		$scope.spaces = [];
+		$scope.statuses = [];
 		$scope.currentSpace = null;
+		$scope.currentStatus = null;
 		$scope.user_id = '';
 
 		$scope.allSpaces = function(){
 			return $scope.currentSpace === null;
 		};
 
+		$scope.allStatuses = function(){
+			return $scope.currentStatus === null;
+		}
+
 		$scope.filterSpace = function(space){
 			$scope.currentSpace = space;
+		}
+
+		$scope.filterStatus = function(status){
+			$scope.currentStatus = status;
 		}
 
 		$scope.isCurrentSpace = function(space){
 			return $scope.currentSpace === space;
 		}
 
-		$scope.spaceIsShown = function(space){
+		$scope.isCurrentStatus = function(status){
+			return $scope.currentStatus === status;
+		}
+
+		$scope.spaceVisible = function(space){
 			if (space.tickets) {
 				if (space.tickets.length) {
-					if (!$scope.currentSpace || $scope.currentSpace == space)
-						return true; 
+					if (!$scope.currentStatus && !$scope.currentSpace)
+						return true;
+					else if (!$scope.currentStatus && $scope.currentSpace) {
+						if ($scope.currentSpace === space) return true;
+						return false;
+					}
+					else if (!$scope.currentSpace && $scope.currentStatus) {
+						for (var i in space.tickets) {
+							var ticket = space.tickets[i];
+							if ($scope.currentStatus === ticket.status) return true;
+						}
+						return false;
+					}
+					else if ($scope.currentSpace && $scope.currentStatus) {
+						if ($scope.currentSpace == space) {
+							for (var i in space.tickets) {
+								if ($scope.currentStatus === space.tickets[i].status) return true;
+							}
+						}
+						return false;
+					}
 				}
 			}
 			return false;
+		}
+
+		$scope.statusVisible = function(status){
+			if ($scope.currentStatus !== null) {
+				if ($scope.currentStatus === status) return true
+				else return false
+			}
+			else return true
 		}
 
 		$scope.isUser = function(user_id1, user_id2){
@@ -76,14 +117,19 @@
 				.success(function(tickets){
 					var i = getSpaceIndexByID(space_id);
 					var new_tickets = [];
+					var temp_statuses = $scope.statuses;
 					for (var ii in tickets) {
 						var ticket = tickets[ii];
+						temp_statuses.push(ticket.status);
 						if (ticket.assigned_to_id === $scope.user_id) {
 							ticket.href = getTicketHref(space_id, ticket.number);
 							new_tickets.push(ticket);
 						}
 					}
 					$scope.spaces[i].tickets = new_tickets;
+					$scope.statuses = temp_statuses.filter(function(elem, pos) {
+					    return temp_statuses.indexOf(elem) == pos;
+					});
 				});
 		}
 

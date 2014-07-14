@@ -5,7 +5,7 @@ A simple dashboard for Bixly/Xepler employees.
 
 Installation:
 ```
-pip install flask requests
+pip install -r requirements.txt
 ```
 create localsettings.py with your key and secret from [Assembla](https://www.assembla.com/user/edit/manage_clients):
 ```

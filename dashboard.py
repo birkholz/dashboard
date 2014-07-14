@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template, request, jsonify
+from flask import Flask, Response, request, jsonify
 import requests
 from localsettings import *
 
@@ -14,10 +14,6 @@ headers = {
 def index():
 	return Response(open('templates/index.html', 'r').read())
 
-
-@app.route("/dashboard")
-def dashboard():
-    return render_template('dashboard.html')
 
 
 def api_request(url, data=None, params=None):
