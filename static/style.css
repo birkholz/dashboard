@@ -2,6 +2,18 @@ a {
     text-decoration: none;
     color: blue;
 }
+#load_button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    width: 100px;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+}
 .space {
     margin-right: 10px;
     color: blue;
@@ -29,4 +41,27 @@ a {
     color: red;
     color: red;
     cursor: pointer;
+}
+.ticket {
+    margin-bottom: 6px;
+}
+.ticket_link {
+    font-size: 17px;
+}
+.ticket_extras {
+    font-size: 13px;
+    color: #888;
+}
+.expand_desc:before {
+    content: "[+]";
+    color: blue;
+    font-weight: bold;
+    cursor: pointer;
+}
+.expand_desc.active:before {
+    content: "[−]";
+}
+.ticket_desc {
+    background: #F7F7F7;
+    margin: 0.2em 0 0.2em 1em;
 }

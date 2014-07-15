@@ -7,7 +7,14 @@
 		<title>Dashboard</title>
 	</head>
 	<body ng-controller="DashboardCtrl">
-		<button ng-click="load()">Load</button>
+        <div id="form" ng-hide="loaded">
+            <div>Get your key/secret <a href="https://www.assembla.com/user/edit/manage_clients">here</a></div>
+            <label for="key">Key: </label><input id="key" type="text" ng-model="key"/>
+            <label for="secret">Secret: </label><input id="secret" type="text" ng-model="secret"/>
+            <button ng-click="load()">Load</button>
+            <div>{{ auth_error }}</div>
+        </div>
+		<button id="load_button" ng-click="load()" ng-show="loaded">Reload</button>
 		<div id="space_list">
 			Space:&nbsp;
 			<span class="space"
@@ -42,10 +49,22 @@
         		<div class="ticket"
         			ng-repeat="ticket in space.tickets"
                     ng-show="statusVisible(ticket.status)">
-        			<a href="{{ticket.href}}">
-        				#{{ticket.number}}: {{ticket.summary}} ({{ticket.status}})
+        			<a class="ticket_link" href="{{ticket.href}}">
+        				#{{ticket.number}}: {{ticket.summary}}
         			</a>
-        			<span class="unassign">Unassign</span>
+                    <div class="ticket_extras">
+                        <span class="expand_desc"
+                            ng-click="toggleDesc(ticket)"
+                            ng-class="{active:ticket.desc_visible}"
+                            ng-show="ticket.description.length"
+                            title="Toggle Description"></span>
+                        <p class="ticket_desc"
+                            ng-show="ticket.desc_visible">{{ticket.description}}</p>
+                        <span ng-hide="currentStatus">Status: <span class="ticket_status">{{ticket.status}}</span> |</span>
+                        Hours Worked: <span class="worked_hours">{{ticket.total_working_hours}}</span> |
+                        Hours Remaining: <span class="worked_hours">{{ticket.working_hours}}</span>
+                        <span class="unassign">Unassign</span>
+                    </div>
         		</div>
         	</div>
         </div>
