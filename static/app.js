@@ -7,6 +7,10 @@
 		$scope.currentSpace = null;
 		$scope.currentStatus = null;
 		$scope.user_id = '';
+        $scope.key = '2627558757f009ef4ccc';
+        $scope.secret = '358362eba7a81661409fe478c0b8f9e55643362b';
+        $scope.loaded = false;
+        $scope.auth_error = null;
 
 		$scope.allSpaces = function(){
 			return $scope.currentSpace === null;
@@ -14,23 +18,23 @@
 
 		$scope.allStatuses = function(){
 			return $scope.currentStatus === null;
-		}
+		};
 
 		$scope.filterSpace = function(space){
 			$scope.currentSpace = space;
-		}
+		};
 
 		$scope.filterStatus = function(status){
 			$scope.currentStatus = status;
-		}
+		};
 
 		$scope.isCurrentSpace = function(space){
 			return $scope.currentSpace === space;
-		}
+		};
 
 		$scope.isCurrentStatus = function(status){
 			return $scope.currentStatus === status;
-		}
+		};
 
 		$scope.spaceVisible = function(space){
 			if (space.tickets) {
@@ -59,36 +63,49 @@
 				}
 			}
 			return false;
-		}
+		};
 
 		$scope.statusVisible = function(status){
 			if ($scope.currentStatus !== null) {
-				if ($scope.currentStatus === status) return true
+				if ($scope.currentStatus === status) return true;
 				else return false
 			}
 			else return true
-		}
+		};
 
 		$scope.isUser = function(user_id1, user_id2){
 			return user_id1 === user_id2;
-		}
+		};
 
-		getUserID = function(){
-			$http
-				.get('/get_user')
-				.success(function(user){
-					$scope.user_id = user.id;
-				});
-		}
+		$scope.toggleDesc = function(ticket) {
+			if (ticket.desc_visible) ticket.desc_visible = !ticket.desc_visible;
+			else ticket.desc_visible = true;
+		};
 
 		getSpaces = function(){
-			$http
-				.get('/get_spaces')
-				.success(function(spaces){
-					$scope.spaces = spaces;
-					for (var i in spaces) {
-						getTickets(spaces[i].id);
-					}
+            headers = {'X-Api-Key': $scope.key, 'X-Api-Secret': $scope.secret};
+            $http
+				.get('/get_user', {'headers': headers})
+				.success(function(user){
+                    if (user.error_description) {
+                        $scope.loaded = false;
+                        $scope.auth_error = user.error_description;
+                        return;
+                    }
+                    else if (!sessionStorage.auth_data || $scope.auth_error) {
+                        saveAuthData($scope.key, $scope.secret);
+                        $scope.auth_error = null;
+                    }
+					$scope.user_id = user.id;
+                    $http
+                        .get('/get_spaces', {'headers': headers})
+                        .success(function(spaces){
+                            $scope.spaces = spaces;
+                            for (var i in spaces) {
+                                getTickets(spaces[i].id);
+                            }
+                        });
+                    $scope.loaded = true;
 				});
 		};
 
@@ -96,7 +113,7 @@
 			for (var i in $scope.spaces) {
 				if ($scope.spaces[i].id === space_id) return i;
 			}
-		}
+		};
 
 		function getSpaceWikiName(id) {
             for (var i in $scope.spaces) {
@@ -112,8 +129,9 @@
         }
 
 		getTickets = function(space_id){
+            headers = {'X-Api-Key': $scope.key, 'X-Api-Secret': $scope.secret};
 			$http
-				.get('/get_tickets/'+space_id)
+				.get('/get_tickets/'+space_id, {'headers': headers})
 				.success(function(tickets){
 					var i = getSpaceIndexByID(space_id);
 					var new_tickets = [];
@@ -131,10 +149,24 @@
 					    return temp_statuses.indexOf(elem) == pos;
 					});
 				});
-		}
-
-		getUserID();
+		};
 
 		$scope.load = getSpaces;
+
+        saveAuthData = function(key, secret) {
+            sessionStorage.auth_data = angular.toJson({'api_key': key, 'api_secret': secret});
+        };
+
+        loadAuthData = function() {
+            if (sessionStorage.auth_data) {
+                var auth_data = angular.fromJson(sessionStorage.auth_data);
+                $scope.key = auth_data.api_key;
+                $scope.secret = auth_data.api_secret;
+                $scope.loaded = true;
+                getSpaces();
+            }
+        };
+
+        loadAuthData();
 	});
 })();
